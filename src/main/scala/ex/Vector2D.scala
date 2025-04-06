@@ -5,32 +5,78 @@ import scala.math.sqrt // Needed for magnitude calculation
 // Represents a vector in 2D space
 // Structure: x-component and y-component
 trait Vector2D:
-  def x: Double
-  def y: Double
 
-  // Vector addition: (x1, y1) + (x2, y2) = (x1+x2, y1+y2)
-  def +(other: Vector2D): Vector2D
+  type Vector
 
-  // Vector subtraction: (x1, y1) - (x2, y2) = (x1-x2, y1-y2)
-  def -(other: Vector2D): Vector2D
+  // inutili se si usa case class
+  // def x: Double
+  // def y: Double
 
-  // Scalar multiplication: s * (x, y) = (s*x, s*y)
-  def *(scalar: Double): Vector2D
+  extension (vector: Vector)
+    // Vector addition: (x1, y1) + (x2, y2) = (x1+x2, y1+y2)
+    def +(other: Vector): Vector
+  
+    // Vector subtraction: (x1, y1) - (x2, y2) = (x1-x2, y1-y2)
+    def -(other: Vector): Vector
+  
+    // Scalar multiplication: s * (x, y) = (s*x, s*y)
+    def *(scalar: Double): Vector
+  
+    // Dot product: (x1, y1) · (x2, y2) = x1*x2 + y1*y2
+    def dot(other: Vector): Double
+  
+    // Magnitude (length): ||(x, y)|| = sqrt(x*x + y*y)
+    def magnitude: Double
 
-  // Dot product: (x1, y1) · (x2, y2) = x1*x2 + y1*y2
-  def dot(other: Vector2D): Double
+object Vector2D extends Vector2D:
 
-  // Magnitude (length): ||(x, y)|| = sqrt(x*x + y*y)
-  def magnitude: Double
+  case class Vector2DImpl(x: Double, y: Double)
+  override type Vector = Vector2DImpl
 
-object Vector2D:
+  extension(vector: Vector)
+    def +(other: Vector): Vector =
+      Vector2DImpl(vector.x + other.x, vector.y + other.y)
+
+    def -(other: Vector): Vector =
+      Vector2DImpl(vector.x - other.x, vector.y - other.y)
+
+    def *(scalar: Double): Vector =
+      Vector2DImpl(vector.x * scalar, vector.y * scalar)
+
+    def dot(other: Vector): Double =
+      (vector.x * other.x) + (vector.y * other.y)
+
+    def magnitude: Double =
+      Math.sqrt(vector.x * vector.x + vector.y * vector.y)
+
+    /*
   // Factory method to create Vector2D instances
-  def apply(x: Double, y: Double): Vector2D = ???
+  def apply(x: Double, y: Double): Vector2D =
+    Vector2DImpl(x,y)
+
+  private class Vector2DImpl(val x: Double, val y: Double) extends Vector2D:
+    assert(!x.isInfinity && !y.isInfinity)
+
+    def +(other: Vector2D): Vector2D =
+      Vector2D(this.x + other.x, this.y + other.y)
+
+    def -(other: Vector2D): Vector2D =
+      Vector2D(this.x - other.x, this.y - other.y)
+
+    def *(scalar: Double): Vector2D =
+      Vector2D(this.x * scalar, this.y * scalar)
+
+    def dot(other: Vector2D): Double =
+      (this.x + other.x) + (this.y + other.y)
+
+    def magnitude: Double =
+      Math.sqrt(this.x * this.x + this.y * this.y)
+*/
 
   // Common vectors (optional but nice)
-  val zero: Vector2D = apply(0.0, 0.0)
-  val i: Vector2D = apply(1.0, 0.0) // Unit vector along x-axis
-  val j: Vector2D = apply(0.0, 1.0) // Unit vector along y-axis
+//  val zero: Vector2D = apply(0.0, 0.0)
+//  val i: Vector2D = apply(1.0, 0.0) // Unit vector along x-axis
+//  val j: Vector2D = apply(0.0, 1.0) // Unit vector along y-axis
 
 
 /** Hints:
@@ -41,8 +87,10 @@ object Vector2D:
  *   - Observe how equality (==) and toString now work correctly out-of-the-box.
  */
 @main def checkVectors(): Unit =
-  val v1 = Vector2D(3.0, 4.0)
-  val v2 = Vector2D(-1.0, 2.0)
+
+  import Vector2D.*
+  val v1 = new Vector(3.0, 4.0)
+  val v2 = new Vector(-1.0, 2.0)
 
   val sum = v1 + v2
   // Expected: (3 + (-1), 4 + 2) = (2.0, 6.0)
@@ -72,7 +120,7 @@ object Vector2D:
   // println(s"Zero vector: ${Vector2D.zero}")
   // println(s"Dot product v1.dot(Vector2D.i): ${v1.dot(Vector2D.i)}") // Should be v1.x = 3.0
 
-  val multipleOps = (v1 + v2) * 3.0 - Vector2D(1.0, 1.0)
+  val multipleOps = (v1 + v2) * 3.0 - new Vector(1.0, 1.0)
   // sum = (2.0, 6.0)
   // sum * 3.0 = (6.0, 18.0)
   // (6.0, 18.0) - (1.0, 1.0) = (5.0, 17.0)

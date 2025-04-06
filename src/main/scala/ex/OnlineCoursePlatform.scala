@@ -1,22 +1,34 @@
 package ex
 
+import org.junit.Assert.assertTrue
 import util.Optionals.Optional
-import util.Sequences.* // Assuming Sequence and related methods are here
+import util.Sequences.*
+import Sequence.*
 
 // Represents a course offered on the platform
 trait Course:
+
   def courseId: String // Unique identifier (e.g., "CS101", "SCALA01")
   def title: String
   def instructor: String
   def category: String // e.g., "Programming", "Data Science", "Design"
 
 object Course:
+
   // Factory method for creating Course instances
-  def apply(courseId: String, title: String, instructor: String, category: String): Course = ???
+  def apply(courseId: String, title: String, instructor: String, category: String): Course =
+    CourseImpl(courseId, title, instructor, category)
+
+  private case class CourseImpl(courseId: String, title: String,
+                                instructor: String, category: String) extends Course:
+    assert(courseId != null && title != null && instructor != null && category != null)
+
+
 /**
  * Manages courses and student enrollments on an online learning platform.
  */
 trait OnlineCoursePlatform:
+
   /**
    * Adds a new course to the platform's catalog.
    * @param course The course to add.
@@ -85,8 +97,52 @@ trait OnlineCoursePlatform:
 end OnlineCoursePlatform
 
 object OnlineCoursePlatform:
+
+  type Platform = OnlineCoursePlatformImpl
+
   // Factory method for creating an empty platform instance
-  def apply(): OnlineCoursePlatform = ??? // Fill Here!
+  // Default apply() when case class is used
+  def apply(): OnlineCoursePlatform =
+    OnlineCoursePlatformImpl(Nil(), Nil(), Nil())
+
+
+  case class OnlineCoursePlatformImpl(var courses: Sequence[Course],
+                                      var students: Sequence[String],
+                                      var courseToStudent: Sequence[(String, String)]) extends OnlineCoursePlatform:
+
+
+    override def addCourse(course: Course): Unit =
+      courses = Cons(course, courses)
+
+    override def getCourse(courseId: String): Optional[Course] =
+      courses.find(_.courseId == courseId)
+
+    override def findCoursesByCategory(category: String): Sequence[Course] =
+      courses.filter(_.category == category)
+
+    override def removeCourse(course: Course): Unit =
+      courses = courses.filter(_ != course)
+      //courseToStudent = courseToStudent.filter((_ != course.courseId, _))
+
+    override def isCourseAvailable(courseId: String): Boolean = courseId match
+      case courseId if courses.filter(_.courseId == courseId) != Nil() => true
+      case _ => false
+
+    override def isStudentEnrolled(studentId: String, courseId: String): Boolean = (studentId, courseId) match
+      case (studentId, courseId) if courseToStudent.filter((_, _) == (studentId, courseId)) != Nil() => true
+      case _ => false
+
+    override def enrollStudent(studentId: String, courseId: String): Unit = (studentId, courseId) match
+      case (studentId, courseId) if isCourseAvailable(courseId) =>
+        courseToStudent = Cons((studentId, courseId), courseToStudent)
+
+    override def unenrollStudent(studentId: String, courseId: String): Unit = (studentId, courseId) match
+      case (studentId, courseId) if isCourseAvailable(courseId) && isStudentEnrolled(studentId, courseId) =>
+        courseToStudent = courseToStudent.filter((_, _) != (studentId, courseId))
+
+    override def getStudentEnrollments(studentId: String): Sequence[Course] =
+      ???
+
 
 /**
  * Represents an online learning platform that offers courses and manages student enrollments.
@@ -102,7 +158,9 @@ object OnlineCoursePlatform:
  *
  */
 @main def mainPlatform(): Unit =
-  val platform = OnlineCoursePlatform()
+
+  import OnlineCoursePlatform.*
+  val platform = new Platform(Nil(),Nil(),Nil())
 
   val scalaCourse = Course("SCALA01", "Functional Programming in Scala", "Prof. Odersky", "Programming")
   val pythonCourse = Course("PYTHON01", "Introduction to Python", "Prof. van Rossum", "Programming")
